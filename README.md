@@ -61,7 +61,7 @@ Auras
 Automation
 - AutoRepair
 - AutoSellJunk
-- Fishing-Helper
+- Fishing-Helper (double-rightclick to cast fishing with equipped fishingpole + optional audio changes)
 
 Bags
 - Movable Bags
@@ -69,7 +69,7 @@ Bags
 
 Chat
 - ChatArrowKeys
-- CopyChat
+- CopyChat (incl. button on top-right of chat)
 - CopyLinks
 
 Tools
@@ -88,12 +88,12 @@ Tooltips
 UI
 - Always show Infopanel (i.e. Characterstats or Reputationdetails)
 - Characterstats (Sorting/Filtering)
-- Framerate
-- LuaErrors
-- PtrIssueReporter
-- Rollframe
+- Move Framerate to topleft
+- Hide LuaErrors
+- Hide PtrIssueReporter
+- Move Rollframe (probably not needed anymore after blizzard fix, but i'll leave it anyway)
 
 UnitFrames
 - Center Target- & Focus-Castbars
 - Hide Hit-Indicator on Portraits
-- PlayerBorder (silver, gold and winged variants)
+- Change PlayerBorder (silver, gold and winged variants)
