@@ -978,7 +978,9 @@ function yTools:DispatchSlashCommand(
         entry.module
 
 
-    if not module:IsEnabled() then
+    local allowDisabled = entry.allowDisabled
+    if type(allowDisabled) == "function" then allowDisabled = allowDisabled(arguments) end
+    if not module:IsEnabled() and not allowDisabled then
 
         yTools:Print(
             "|cffff0000yTools:|r "

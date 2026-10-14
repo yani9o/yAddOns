@@ -7,6 +7,8 @@
 	<Script file="Modules\BuffList.lua"/>
 	<Script file="Modules\Castbars.lua"/>
 	<Script file="Modules\CastOnKeyRelease.lua"/>
+	<Script file="Modules\CharacterStats.lua"/>
+	<Script file="Modules\CharacterInfoPanel.lua"/>
 	<Script file="Modules\ChatArrowKeys.lua"/>
 	<Script file="Modules\CopyChat.lua"/>
 	<Script file="Modules\CopyLinks.lua"/>

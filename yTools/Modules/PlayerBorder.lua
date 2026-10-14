@@ -324,6 +324,11 @@ local function PrintOptions()
     )
 
     yTools:Print(
+        "|cff00ff00/ytools playerborder options|r -> "
+        .. L.PLAYERBORDER_OPTIONS_COMMAND_HELP
+    )
+
+    yTools:Print(
         "|cff00ff00/ytools playerborder |cffffff00x|r"
     )
 
@@ -557,7 +562,8 @@ module:RegisterSlashCommand(
             "^%s*(.-)%s*$"
         )
 
-        if arguments:lower() == "ui" then
+        local subcommand = arguments:lower()
+        if subcommand == "ui" or subcommand == "options" or subcommand == "config" then
             module:OpenOptionsPanel()
             return
         end
@@ -571,3 +577,8 @@ module:RegisterSlashCommand(
     end,
     L.SHOW_OR_CHANGE_PLAYERFRAME_BORDER
 )
+
+yTools.commands.playerborder.allowDisabled = function(arguments)
+    local command = (arguments or ""):match("^%s*(.-)%s*$"):lower()
+    return command == "ui" or command == "options" or command == "config"
+end

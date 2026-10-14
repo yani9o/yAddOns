@@ -549,6 +549,7 @@ function yTools:CreateOptionsPanel()
 
     self.optionsCategory = optionsCategory
     local optionPages = {
+        { id = "CharacterStats", title = L.CHARACTERSTATS_OPTIONS },
         { id = "Macro", title = L.MACRO_MANAGER },
         { id = "PlayerBorder", title = L.PLAYER_BORDER },
         { id = "TooltipTargetTarget", title = L.TARGET_TARGET_OPTIONS },

@@ -2,6 +2,28 @@
 -- Keep internal IDs, commands and saved values out of translated UI text.
 local _, addon = ...
 local terms = {
+    ["PLAYERBORDER_OPTIONS_COMMAND_HELP"] = { enUS = "show options UI", deDE = "Optionen öffnen" },
+    ["CHARACTERSTATS_COMMAND_HELP"] = { enUS = "Opens the character stats options.", deDE = "Öffnet die Optionen für Charakterwerte." },
+    ["FISHING_COMMAND_HELP"] = { enUS = "Opens the fishing helper options.", deDE = "Öffnet die Optionen für die Angelhilfe." },
+    ["UI_CHARACTER_INFO_PANEL"] = { enUS = "UI > Always show Infopanel", deDE = "UI > Infopanel immer anzeigen" },
+    ["CHARACTER_INFO_PANEL_DESCRIPTION"] = {
+        enUS = "Keeps the infopanel expanded on all character window tabs.",
+        deDE = "Hält das Infopanel auf allen Tabs des Charakterfensters geöffnet.",
+    },
+    ["UI_CHARACTERSTATS"] = { enUS = "UI > Characterstats     /ytools charstats", deDE = "UI > Charakterwerte     /ytools charstats" },
+    ["CHARACTERSTATS_OPTIONS"] = { enUS = "Characterstats", deDE = "Charakterwerte" },
+    ["CHARACTERSTATS_DESCRIPTION"] = {
+        enUS = "Allows you to reorder and hide character stats.",
+        deDE = "Erlaubt das Sortieren und Ausblenden von Charakterwerten.",
+    },
+    ["CHARACTERSTATS_HINT"] = {
+        enUS = "Use the arrows to change the order and the checkboxes to show or hide sections and stats. Saved per character.",
+        deDE = "Ändere die Reihenfolge mit den Pfeilen und blende Bereiche und Werte mit den Kontrollkästchen ein oder aus. Wird pro Charakter gespeichert.",
+    },
+    ["CHARACTERSTATS_ENABLE"] = { enUS = "Enable", deDE = "Aktivieren" },
+    ["CHARACTERSTATS_RESET"] = { enUS = "Reset order and visibility", deDE = "Reihenfolge und Sichtbarkeit zurücksetzen" },
+    ["CHARACTERSTATS_UP"] = { enUS = "Move up", deDE = "Nach oben" },
+    ["CHARACTERSTATS_DOWN"] = { enUS = "Move down", deDE = "Nach unten" },
     ["TOOLTIP_ITEM_COUNT"] = {
         enUS = "Tooltip > Bag/Bank Counter     /ytools itemcount",
         deDE = "Tooltip > Taschen-/Bankzähler     /ytools itemcount",
@@ -675,8 +697,8 @@ local terms = {
         deDE = "Fixiert die Zauberleisten von Ziel und Fokus an eigenen Positionen.",
     },
     ["AUTOMATION_FISHING"] = {
-        enUS = "Automation > Fishing helper",
-        deDE = "Automation > Angelhilfe",
+        enUS = "Automation > Fishing helper     /ytools fishing",
+        deDE = "Automation > Angelhilfe     /ytools fishing",
     },
     ["DOUBLE_RIGHT_CLICK_IN_THE_WORLD_WITH_A_FISHING_ROD_EQUIPPED_TO_CAST_FISHING_DOES_NOT"] = {
         enUS = "Double right-click in the world with a fishing rod equipped to cast Fishing.",

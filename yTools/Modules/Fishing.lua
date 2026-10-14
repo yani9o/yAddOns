@@ -421,3 +421,15 @@ function fishingModule:CreateOptionsPanel(parentCategory)
     self.settingsCategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, panel, L.FISHING_OPTIONS)
     panel.RefreshForm()
 end
+
+local yTools = _G.yTools
+fishingModule:RegisterSlashCommand("fishing", function()
+    yTools:InitializeOptions()
+    fishingModule:CreateOptionsPanel(yTools.optionsCategory)
+    local category = fishingModule.settingsCategory
+    if category and Settings and Settings.OpenToCategory then
+        Settings.OpenToCategory(category.GetID and category:GetID() or category.ID)
+    end
+end, L.FISHING_COMMAND_HELP)
+-- Options must remain reachable when this module is disabled.
+yTools.commands.fishing.allowDisabled = true
