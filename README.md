@@ -44,7 +44,7 @@ Supported Talentbuilders are:
 - https://www.warcrafttavern.com/forever/tools/talent-calculator/
 
 # 3 - yTools
-<img width="693" height="557" alt="image" src="https://github.com/user-attachments/assets/b6aaaaba-e0c9-4366-8002-9311f56c919f" />
+<img width="700" height="557" alt="image" src="https://github.com/user-attachments/assets/15dd1106-b2f1-4808-a679-df06d8315cb3" />
 
 Collection of QoL Modules for WoW Forever.
 
