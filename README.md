@@ -86,6 +86,8 @@ Tooltips
 - VendorPrice
 
 UI
+- Always show Infopanel (i.e. Characterstats or Reputationdetails)
+- Characterstats (Sorting/Filtering)
 - Framerate
 - LuaErrors
 - PtrIssueReporter
