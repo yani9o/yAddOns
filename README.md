@@ -65,7 +65,7 @@ Automation
 
 Bags
 - Movable Bags
-- Reverse BagSlots
+- Reorganize BagSlots
 
 Chat
 - ChatArrowKeys
