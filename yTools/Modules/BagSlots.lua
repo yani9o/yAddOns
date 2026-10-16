@@ -1,8 +1,10 @@
-local L = _G.yTools.L
-local module = _G.yTools:RegisterModule("ReverseBagSlots", {
-    title = L.BAGS_REVERSE_COMBINED_BAG_SLOTS,
-    description = L.DISPLAYS_COMBINED_BAG_SLOTS_FROM_TOP_LEFT_TO_BOTTOM_RIGHT_WITHOUT_MOVING_ITEMS,
+local yTools = _G.yTools
+local L = yTools.L
+local module = _G.yTools:RegisterModule("BagSlots", {
+    title = L.BAG_SLOTS_MODULE,
+    description = L.BAG_SLOTS_DESCRIPTION,
     defaultEnabled = true,
+    defaults = { reverseSlots = false },
 })
 
 local worker = CreateFrame("Frame")
@@ -14,7 +16,9 @@ local function Defer()
     worker:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
-local function ReverseLayout(frame)
+
+
+local function ArrangeLayout(frame)
     if not module:IsEnabled() then return end
     if not frame.EnumerateValidItems then return end
     if InCombatLockdown() and frame:IsProtected() then Defer(); return end
@@ -34,6 +38,7 @@ local function ReverseLayout(frame)
         local ratio = button:GetEffectiveScale() / frameScale
         slots[#slots + 1] = {button = button, x = x * ratio - left, y = y * ratio - bottom}
     end
+    if #slots == 0 then return end
     table.sort(slots, function(a, b)
         if math.abs(a.y - b.y) > .1 then return a.y > b.y end
         return a.x < b.x
@@ -55,8 +60,9 @@ local function ReverseLayout(frame)
     table.sort(rows, function(a, b) return a > b end)
     -- Clear the whole old anchor chain before reconnecting any button.
     for _, slot in ipairs(slots) do slot.button:ClearAllPoints() end
+    local reverse = module:GetDB().reverseSlots == true
     for i = 1, #slots do
-        local slot = slots[#slots - i + 1]
+        local slot = slots[reverse and (#slots - i + 1) or i]
         local column = (i - 1) % #columns + 1
         local row = math.floor((i - 1) / #columns) + 1
         slot.button:SetPoint("CENTER", frame, "BOTTOMLEFT", columns[column], rows[row])
@@ -80,7 +86,7 @@ local function Refresh()
     pending = false
     worker:UnregisterEvent("PLAYER_REGEN_ENABLED")
     refreshing = true
-    -- Rebuild WoW's original layout first. The hook reverses it only if enabled;
+    -- Rebuild WoW's original layout first. The hook arranges it only if enabled;
     -- disabling this module therefore restores the original display immediately.
     local ok, err = pcall(frame.UpdateItemLayout, frame)
     refreshing = false
@@ -91,7 +97,7 @@ local function InstallHooks()
     local frame = _G.ContainerFrameCombinedBags
     if not frame or not frame.UpdateItemLayout or hooked[frame] then return false end
     hooked[frame] = true
-    hooksecurefunc(frame, "UpdateItemLayout", ReverseLayout)
+    hooksecurefunc(frame, "UpdateItemLayout", ArrangeLayout)
     frame:HookScript("OnShow", Refresh)
     return true
 end
@@ -99,10 +105,12 @@ end
 function module:OnEnable()
     InstallHooks()
     Refresh()
+    if self.settingsPanel then self.settingsPanel.RefreshForm() end
 end
 
 function module:OnDisable()
     Refresh()
+    if self.settingsPanel then self.settingsPanel.RefreshForm() end
 end
 
 worker:RegisterEvent("ADDON_LOADED")
@@ -118,3 +126,54 @@ module:RegisterEvent("PLAYER_ENTERING_WORLD", function()
     InstallHooks()
     Refresh()
 end)
+
+function module:CreateOptionsPanel(parentCategory)
+    if self.settingsPanel or not parentCategory or not Settings
+        or not Settings.RegisterCanvasLayoutSubcategory then return end
+    local panel = CreateFrame("Frame")
+    panel:Hide()
+    panel:SetSize(700, 560)
+    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 32, -24); title:SetText(L.BAG_SLOTS_OPTIONS)
+    local function Check(label, y)
+        local button = CreateFrame("CheckButton", nil, panel, "InterfaceOptionsCheckButtonTemplate")
+        yTools.UI.Check(button)
+        button:SetPoint("TOPLEFT", 32, y)
+        local text = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        text:SetPoint("LEFT", button, "RIGHT", 5, 0); text:SetText(label)
+        return button
+    end
+    local enabled = Check(L.ENABLE_BAG_SLOTS, -70)
+    local reverse = Check(L.REVERSE_BAG_SLOTS, -110)
+    local description = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    description:SetPoint("TOPLEFT", 32, -150); description:SetWidth(590)
+    description:SetJustifyH("LEFT"); description:SetText(L.BAG_SLOTS_DESCRIPTION)
+    local function Update()
+        enabled:SetChecked(self:IsEnabled())
+        reverse:SetChecked(self:GetDB().reverseSlots == true)
+        reverse:SetEnabled(self:IsEnabled())
+    end
+    enabled:SetScript("OnClick", function(button)
+        if button:GetChecked() then self:Enable() else self:Disable() end
+        Update()
+    end)
+    reverse:SetScript("OnClick", function(button)
+        self:GetDB().reverseSlots = button:GetChecked() == true
+        Refresh()
+    end)
+    panel:SetScript("OnShow", Update)
+    panel.RefreshForm = Update
+    self.settingsPanel = panel
+    self.settingsCategory = Settings.RegisterCanvasLayoutSubcategory(parentCategory, panel, L.BAG_SLOTS_OPTIONS)
+    Update()
+end
+
+module:RegisterSlashCommand("bagslots", function()
+    yTools:InitializeOptions()
+    module:CreateOptionsPanel(yTools.optionsCategory)
+    local category = module.settingsCategory
+    if category and Settings and Settings.OpenToCategory then
+        Settings.OpenToCategory(category.GetID and category:GetID() or category.ID)
+    end
+end, L.BAG_SLOTS_COMMAND_HELP)
+yTools.commands.bagslots.allowDisabled = true

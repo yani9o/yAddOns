@@ -589,8 +589,10 @@ function T:GetPlanTrees()
     -- Infer a grid from mapped live positions, independently for each tree.
     for index, tree in ipairs(trees) do
         local originX, originY, stepX, stepY
+        local rowSteps, firstLiveRow = {}, nil
         for _, a in ipairs(tree) do
             local na = draft.nodes[a.id]
+            if na.posY then firstLiveRow = math.min(firstLiveRow or na.posY, na.posY) end
             for _, b in ipairs(tree) do
                 local nb = draft.nodes[b.id]
                 if na.posX and nb.posX and a.col ~= b.col then
@@ -599,15 +601,28 @@ function T:GetPlanTrees()
                 end
                 if na.posY and nb.posY and a.row ~= b.row then
                     local step = (nb.posY - na.posY) / (b.row - a.row)
-                    if step > 0 then stepY = stepY or step end
+                    if step > 0 then rowSteps[#rowSteps + 1] = step end
                 end
             end
         end
-        stepX, stepY = stepX or 600, stepY or 600
+        table.sort(rowSteps)
+        stepX, stepY = stepX or 600, rowSteps[math.ceil(#rowSteps / 2)] or 600
         for _, entry in ipairs(tree) do
             local node = draft.nodes[entry.id]
             if node.posX then originX = originX or node.posX - entry.col * stepX end
             if node.posY then originY = originY or node.posY - entry.row * stepY end
+        end
+        -- Drawn nodes already use live positions. Use the live tier for their
+        -- requirements too: calculator metadata can lag behind moved talents.
+        if firstLiveRow then
+            originY = firstLiveRow
+            for _, entry in ipairs(tree) do
+                local node = draft.nodes[entry.id]
+                if node.posY then
+                    local row = math.floor((node.posY - originY) / stepY + 0.5)
+                    if row >= 0 and row <= 8 then entry.row = row end
+                end
+            end
         end
         for id, node in pairs(draft.nodes) do
             local member = false

@@ -549,6 +549,7 @@ function yTools:CreateOptionsPanel()
 
     self.optionsCategory = optionsCategory
     local optionPages = {
+        { id = "BagSlots", title = L.BAG_SLOTS_OPTIONS },
         { id = "CharacterStats", title = L.CHARACTERSTATS_OPTIONS },
         { id = "Macro", title = L.MACRO_MANAGER },
         { id = "PlayerBorder", title = L.PLAYER_BORDER },

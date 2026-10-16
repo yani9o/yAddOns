@@ -2,6 +2,10 @@
 -- Keep internal IDs, commands and saved values out of translated UI text.
 local _, addon = ...
 local terms = {
+    ["BAG_SLOTS_OPTIONS"] = { enUS = "Bag Slots", deDE = "Taschenplätze" },
+    ["BAG_SLOTS_COMMAND_HELP"] = { enUS = "Opens the bag slot options.", deDE = "Öffnet die Optionen für Taschenplätze." },
+    ["ENABLE_BAG_SLOTS"] = { enUS = "Enable bag slot layout", deDE = "Taschenplatz-Anordnung aktivieren" },
+    ["REVERSE_BAG_SLOTS"] = { enUS = "Reverse slots", deDE = "Taschenplätze umkehren" },
     ["PLAYERBORDER_OPTIONS_COMMAND_HELP"] = { enUS = "show options UI", deDE = "Optionen öffnen" },
     ["CHARACTERSTATS_COMMAND_HELP"] = { enUS = "Opens the character stats options.", deDE = "Öffnet die Optionen für Charakterwerte." },
     ["FISHING_COMMAND_HELP"] = { enUS = "Opens the fishing helper options.", deDE = "Öffnet die Optionen für die Angelhilfe." },
@@ -732,13 +736,13 @@ local terms = {
         enUS = "Hides the stancebar.",
         deDE = "Blendet die Haltungsleiste aus.",
     },
-    ["BAGS_REVERSE_COMBINED_BAG_SLOTS"] = {
-        enUS = "Bags > Reverse Combined Bag Slots",
-        deDE = "Taschen > Reihenfolge der Taschenplätze umkehren",
+    ["BAG_SLOTS_MODULE"] = {
+        enUS = "Bags > Bag Slots     /ytools bagslots",
+        deDE = "Taschen > Taschenplätze     /ytools bagslots",
     },
-    ["DISPLAYS_COMBINED_BAG_SLOTS_FROM_TOP_LEFT_TO_BOTTOM_RIGHT_WITHOUT_MOVING_ITEMS"] = {
-        enUS = "Displays combined bag slots from top-left to bottom-right without moving items.",
-        deDE = "Zeigt Taschenplätze von oben links nach unten rechts an, ohne Gegenstände zu verschieben.",
+    ["BAG_SLOTS_DESCRIPTION"] = {
+        enUS = "Arranges slots in the combined bag from top-left to bottom-right. Optionally reverses the displayed slot order.",
+        deDE = "Ordnet Plätze im kombinierten Taschenfenster von oben links nach unten rechts an. Die angezeigte Reihenfolge kann umgekehrt werden.",
     },
     ["UI_ROLLFRAME_YTOOLS_ROLLFRAME"] = {
         enUS = "UI > Rollframe     /ytools rollframe",
