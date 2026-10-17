@@ -7,7 +7,7 @@ A.title = "|cff4b7dccy|r|cffffffffAuras|r"
 A.draggers = {}
 A.defaults = {name="",enabled=1,type="Buff",unit="Player",myCast=0,invert=0,showCD="Always",autodetect=1,
  texture="Interface\\Icons\\INV_Misc_QuestionMark",scale=1,xpos=0,ypos=0,duration=1,stacks=0,dual=0,
- inCombat=1,outCombat=1,inParty=0,inRaid=0,onlyWithTarget=0,targetType="Any",lowduration=0,lowdurationvalue=5,
+ inCombat=1,outCombat=1,inParty=0,inRaid=0,onlyWithTarget=0,targetType="Any",lowduration=0,lowdurationvalue=0,
  auracolor={1,1,1,1},lowdurationcolor={1,0,0,1}}
 function A:AuraUnit(rule)
  if rule.unit=="Friendly" or rule.unit=="Enemy" then return "target" end

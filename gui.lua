@@ -1288,7 +1288,7 @@ function sA:EditAura(id)
 
   ed.lowduration.value = aura.lowduration or 0
   if ed.lowduration.value == 1 then ed.lowduration.checked:Show() else ed.lowduration.checked:Hide() end
-  ed.lowdurationvalue:SetText(aura.lowdurationvalue or 5)
+  ed.lowdurationvalue:SetText(aura.lowdurationvalue or 0)
   ed.lowdurationcolor = aura.lowdurationcolor or {1,0,0,1}
   ed.lowdurationcolorpicker.prev:SetColorTexture(unpack(ed.lowdurationcolor))
 
