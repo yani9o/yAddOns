@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: |cff4b7dccy|cffffffffAuras|r
+## Notes: Lightweight buff, debuff and cooldown displays. /yAuras
+## Notes-deDE: Leichte Anzeige von Buffs, Debuffs und Cooldowns. /yAuras
+## Author: yani9o
+## Version: 1.0
+## AddonCompartmentFunc: yAuras_OnAddonCompartmentClick
+## OptionalDeps: yTools
+## SavedVariables: yAurasAccountDB
+## SavedVariablesPerCharacter: yAurasDB
+## IconTexture: Interface\icons\Spell_holy_improvedresistanceauras
+localization.lua
+iconpaths.lua
+init.lua
+timers.lua
+core.lua
+native.lua
+UI.lua
+transfer.lua
+gui.lua
