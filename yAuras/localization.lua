@@ -393,6 +393,10 @@ local terms = {
         enUS = "Enemy",
         deDE = "Feindlich",
     },
+    ["VALUE_TARGET_TARGET"] = {
+        enUS = "Target of Target",
+        deDE = "Ziel des Ziels",
+    },
     ["VALUE_FOCUS"] = {
         enUS = "Focus",
         deDE = "Fokus",

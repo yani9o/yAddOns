@@ -6,7 +6,7 @@ A.name, A.frames, A.enabled = addonName, {}, true
 A.title = "|cff4b7dccy|r|cffffffffAuras|r"
 A.draggers = {}
 A.defaults = {name="",enabled=1,type="Buff",unit="Player",myCast=0,invert=0,showCD="Always",autodetect=1,
- texture="Interface\\Icons\\INV_Misc_QuestionMark",scale=1,xpos=0,ypos=0,duration=1,stacks=1,dual=0,
+ texture="Interface\\Icons\\INV_Misc_QuestionMark",scale=1,xpos=0,ypos=0,duration=1,stacks=0,dual=0,
  inCombat=1,outCombat=1,inParty=0,inRaid=0,onlyWithTarget=0,targetType="Any",lowduration=0,lowdurationvalue=5,
  auracolor={1,1,1,1},lowdurationcolor={1,0,0,1}}
 function A:AuraUnit(rule)
@@ -49,7 +49,7 @@ function A:Normalize(t)
  -- Texture selections saved before the addon rename keep working.
  out.scale=math.max(.1,math.min(10,out.scale)); out.lowdurationvalue=math.max(0,out.lowdurationvalue)
  if out.type~="Buff" and out.type~="Debuff" and out.type~="Cooldown" then out.type="Buff" end
- local units={Player=true,Target=true,Friendly=true,Enemy=true,Focus=true,Pet=true}
+ local units={Player=true,Target=true,Friendly=true,Enemy=true,Focus=true,TargetTarget=true,Pet=true}
  if not units[out.unit] then out.unit="Player" end
  if out.showCD~="Always" and out.showCD~="CD" and out.showCD~="No CD" then out.showCD="Always" end
  if out.targetType~="Any" and out.targetType~="Friendly" and out.targetType~="Enemy" and out.targetType~="None" then out.targetType="Any" end
@@ -125,6 +125,7 @@ function A:LocalizeValue(value)
   ["Any"] = "VALUE_ANY",
   ["None"] = "VALUE_NONE",
   ["Focus"] = "VALUE_FOCUS",
+  ["TargetTarget"] = "VALUE_TARGET_TARGET",
   ["Pet"] = "VALUE_PET",
   ["Always"] = "VALUE_ALWAYS",
   ["CD"] = "VALUE_CD",

@@ -214,7 +214,7 @@ function A:Conditions(rule)
  return combatOK and groupOK
 end
 function A:IsDeadAuraUnit(rule)
- if rule.type=="Cooldown" or (self:AuraUnit(rule)~="target" and self:AuraUnit(rule)~="focus") then return false end
+ if rule.type=="Cooldown" or (self:AuraUnit(rule)~="target" and self:AuraUnit(rule)~="focus" and self:AuraUnit(rule)~="targettarget") then return false end
  local dead,ok=safe(UnitIsDeadOrGhost,A:AuraUnit(rule))
  return ok and public(dead) and dead==true
 end
@@ -399,7 +399,7 @@ function A:Refresh()
  self:Schedule()
 end
 local events=CreateFrame("Frame")
-for _,ev in ipairs({"UNIT_AURA","UNIT_HEALTH","UNIT_FLAGS","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED","SPELL_UPDATE_COOLDOWN","SPELL_UPDATE_CHARGES","SPELLS_CHANGED","PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","GROUP_ROSTER_UPDATE","UNIT_PET","UNIT_SPELLCAST_SUCCEEDED","ADDON_RESTRICTION_STATE_CHANGED","PLAYER_ENTERING_WORLD"}) do events:RegisterEvent(ev) end
+for _,ev in ipairs({"UNIT_AURA","UNIT_HEALTH","UNIT_FLAGS","UNIT_TARGET","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED","SPELL_UPDATE_COOLDOWN","SPELL_UPDATE_CHARGES","SPELLS_CHANGED","PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","GROUP_ROSTER_UPDATE","UNIT_PET","UNIT_SPELLCAST_SUCCEEDED","ADDON_RESTRICTION_STATE_CHANGED","PLAYER_ENTERING_WORLD"}) do events:RegisterEvent(ev) end
 -- Coalesce event bursts and update timers at the selected rate; no scanning without rules.
 local elapsed,dirty=0,true
 function A:Schedule()
@@ -412,15 +412,16 @@ function A:Schedule()
 end
 events:SetScript("OnEvent",function(_,ev,unit,castGUID,spellID)
  if ev=="UNIT_HEALTH" or ev=="UNIT_FLAGS" then
-  if unit~="target" and unit~="focus" then return end
+  if unit~="target" and unit~="focus" and unit~="targettarget" then return end
   local dead,ok=safe(UnitIsDeadOrGhost,unit)
   if not ok or not public(dead) or dead~=true then return end
   if A.loaded then A:Refresh();dirty=false end;return
  end
- if ev=="PLAYER_TARGET_CHANGED" or ev=="PLAYER_FOCUS_CHANGED" then
+ if ev=="UNIT_TARGET" and unit~="target" then return end
+ if ev=="PLAYER_TARGET_CHANGED" or ev=="PLAYER_FOCUS_CHANGED" or ev=="UNIT_TARGET" then
   if A.loaded then A:SyncNative();A:Refresh();dirty=false end;return
  end
- if ev=="UNIT_AURA" and unit~="player" and unit~="target" and unit~="focus" and unit~="pet" then return end
+ if ev=="UNIT_AURA" and unit~="player" and unit~="target" and unit~="focus" and unit~="targettarget" and unit~="pet" then return end
  if ev=="SPELL_UPDATE_COOLDOWN" and A.loaded then A:CaptureCooldownFlags() end
  if ev=="UNIT_SPELLCAST_SUCCEEDED" then if unit=="player" then A:NoteOwnCast(spellID) end; return end
  if ev=="SPELLS_CHANGED" or ev=="PLAYER_REGEN_ENABLED" or ev=="ADDON_RESTRICTION_STATE_CHANGED" or ev=="PLAYER_ENTERING_WORLD" then A:InvalidateAll(); if ev=="SPELLS_CHANGED" then A:LearnSpellBook() end end

@@ -899,7 +899,7 @@ function sA:EditAura(id)
 	ed.unitLabel:SetPoint("LEFT", ed.typeLabel, "LEFT", 228, 0)
 	ed.unitLabel:SetText(L.UNIT)
 	ed.unitButton = CreateFrame("DropdownButton", nil, ed, "WowStyle1DropdownTemplate,BackdropTemplate")
-	ed.unitButton:SetWidth(80)
+	ed.unitButton:SetWidth(120)
 	ed.unitButton:SetHeight(20)
 	ed.unitButton:SetPoint("LEFT", ed.unitLabel, "RIGHT", 5, 0)
 	sA:SkinFrame(ed.unitButton, {0.2,0.2,0.2,1})
@@ -910,7 +910,7 @@ function sA:EditAura(id)
     UI.DropdownLayout(ed.unitButton)
     ed.unitButton:SetSelectionText(function() return sA:LocalizeValue(ed.unitButton.value) or "" end)
     ed.unitButton:SetupMenu(function(_,root)
-      for _,value in ipairs({"Player","Target","Friendly","Enemy"}) do
+      for _,value in ipairs({"Player","Target","Focus","TargetTarget","Friendly","Enemy"}) do
         local choice=value
         root:CreateRadio(sA:LocalizeValue(choice),function() return ed.unitButton.value==choice end,function()
           ed.unitButton.value=choice
