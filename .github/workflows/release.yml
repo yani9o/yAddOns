@@ -1,22 +1,19 @@
-name: Release after merged PR
+name: Release after commit
 
 on:
-  pull_request_target:
+  push:
     branches: [main]
-    types: [closed]
 
 permissions:
   contents: write
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
           persist-credentials: false
 
       - name: Package addon
@@ -32,12 +29,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           ADDON_NAME: ${{ github.event.repository.name }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
-          gh release create "pr-$PR_NUMBER" \
+          RELEASE_TITLE="$(git log -1 --format=%s)"
+
+          gh release create \
+            "build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" \
             "$RUNNER_TEMP/$ADDON_NAME.zip" \
-            --target "$MERGE_SHA" \
-            --title "$ADDON_NAME — PR #$PR_NUMBER" \
-            --notes "Automatic release after merging PR #$PR_NUMBER." \
+            --target "$GITHUB_SHA" \
+            --title "$RELEASE_TITLE" \
+            --notes "Automatic release for commit $GITHUB_SHA." \
             --latest
