@@ -83,9 +83,10 @@ loader:SetScript("OnEvent",function(_,event,name)
  if event=="ADDON_LOADED" and name==addonName then
   -- Use only yAuras saved settings.
   yAurasDB=type(yAurasDB)=="table" and yAurasDB or {}
+  yAurasDB.refresh=nil; yAurasDB.approximate=nil
+  A:SpellCache()
   yAurasDB.auras=type(yAurasDB.auras)=="table" and yAurasDB.auras or {}
   for i,t in ipairs(yAurasDB.auras) do yAurasDB.auras[i]=A:Normalize(type(t)=="table" and t or {}) end
-  yAurasDB.refresh=math.max(1,math.min(10,tonumber(yAurasDB.refresh) or 5))
   A.loaded=true; A.SettingsLoaded=true; A.enabled=yAurasDB.enabled~=false
   A.nativeDirty=true
  elseif event=="PLAYER_LOGIN" then
@@ -93,25 +94,7 @@ loader:SetScript("OnEvent",function(_,event,name)
  end
 end)
 SLASH_YAURAS1="/yauras"; SLASH_YAURAS2="/sa"; SLASH_YAURAS3="/simpleauras"
-SlashCmdList.YAURAS=function(msg)
- local cmd,arg=msg:match("^%s*(%S*)%s*(.-)%s*$"); cmd=cmd:lower()
- if cmd=="refresh" then
-  local n=tonumber(arg)
-  if n and n>=1 and n<=10 then yAurasDB.refresh=n else A:Msg(L.SA_REFRESH_1_10_CURRENT..yAurasDB.refresh..")") end
- elseif cmd=="enable" or cmd=="disable" then
-  A:SetEnabled(cmd=="enable")
- elseif cmd=="hide" then if A.gui then A.gui:Hide() end
- elseif cmd=="native" then A:NativeStatus()
- elseif cmd=="approximate" then
-  if arg=="on" or arg=="off" then
-   yAurasDB.approximate=arg=="on";A:InvalidateAll();A:Refresh()
-  end
-  A:Msg(L.APPROXIMATE_PLAYER_DEBUFFS..(yAurasDB.approximate==false and L.VALUE_OFF or L.VALUE_ON)..L.SA_APPROXIMATE_ON_OFF_LEARNS_OUTSIDE_COMBAT_MATCHES_MAY_BE_AMBIGUOUS)
- elseif cmd=="status" then
-  A:Msg(L.CLIENT..tostring(select(4,GetBuildInfo()))..L.AURAS..#yAurasDB.auras.."; "..(A.enabled and L.VALUE_ENABLED or L.VALUE_DISABLED)..L.UNAVAILABLE_RULES..(A.unavailable or 0))
- elseif cmd=="help" then A:Msg(L.SA_EDITOR_SA_REFRESH_1_10_SA_ENABLE_DISABLE_SA_STATUS_SA_NATIVE_SA_APPROXIMATE_ON_OFF)
- else A:OpenEditor() end
-end
+SlashCmdList.YAURAS=function() A:OpenEditor() end
 
 function A:LocalizeValue(value)
  local keys = {

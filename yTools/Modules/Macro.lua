@@ -1219,7 +1219,45 @@ end
 local disenchantSpell = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(13262))
     or (GetSpellInfo and GetSpellInfo(13262)) or L.DISENCHANT
 
+local comprehendSpell = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(1296017))
+    or (GetSpellInfo and GetSpellInfo(1296017)) or L.COMPREHEND_SCROLL
+
+local function GenerateChannelingMacro(spell, focusModifier)
+    return "#showtooltip " .. spell .. "\n/stopcasting [nochanneling]\n/cast [nochanneling,mod:" .. focusModifier
+        .. ",@focus,exists][nochanneling,@mouseover,exists,nodead][nochanneling]" .. spell
+end
+
+local function GenerateFocusCCMacro(spell)
+    return "#showtooltip\n/cast [mod:shift,@focus,harm][@mouseover,harm,nodead][]" .. spell
+        .. "\n/focus [nomod:shift,@mouseover,harm,nodead][nomod:shift]"
+end
+
+local function NextMacroInput(inputs, current)
+    local step = IsShiftKeyDown() and -1 or 1
+    for index, input in ipairs(inputs) do
+        if input == current then
+            for offset = 1, #inputs do
+                local nextInput = inputs[(index - 1 + offset * step) % #inputs + 1]
+                if nextInput:IsShown() and nextInput:IsEnabled() then
+                    current:ClearFocus()
+                    nextInput:SetFocus()
+                    nextInput:HighlightText()
+                    return
+                end
+            end
+        end
+    end
+end
+
 local PRESET_MACROS = {
+    focusCC = { editableSpell = true },
+    comprehendScroll = {
+        name = "_yScroll",
+        text = string.format([[#showtooltip
+/run local f=yS or CreateFrame("Button","yS",nil,"SecureActionButtonTemplate") f:RegisterForClicks("AnyDown","AnyUp") f:SetAttribute("type","click") f:SetAttribute("clickbutton",GetMouseFoci()[1])
+/use %s
+/click yS]], comprehendSpell),
+    },
     disenchant = {
         name = "_yDE",
         text = string.format([[#showtooltip %s
@@ -1331,7 +1369,7 @@ function module:CreateOptionsPanel(parentCategory)
         if panel.macroType == "preset" then
             local preset = PRESET_MACROS[panel.preset]
             if not preset then return nil, L.CHOOSE_A_PRESET end
-            return preset.text, nil, preset.name
+            if not preset.editableSpell then return preset.text, nil, preset.name end
         end
         local name, spell = Trim(panel.name:GetText()), Trim(panel.spell:GetText())
         local helpSpell = Trim(panel.helpSpell:GetText())
@@ -1345,7 +1383,9 @@ function module:CreateOptionsPanel(parentCategory)
             return nil, L.SPELL_NAMES_MUST_BE_ON_ONE_LINE
         end
         local text
-        if panel.macroType == "harm" then text = GenerateHarmMacro(spell, panel.focusModifier)
+        if panel.macroType == "preset" and panel.preset == "focusCC" then text = GenerateFocusCCMacro(spell)
+        elseif panel.macroType == "channeling" then text = GenerateChannelingMacro(spell, panel.focusModifier)
+        elseif panel.macroType == "harm" then text = GenerateHarmMacro(spell, panel.focusModifier)
         elseif panel.macroType == "help" then text = GenerateHelpMacro(spell, panel.focusModifier, panel.playerModifier)
         elseif panel.macroType == "dual" then text = GenerateGeneralMacro(spell, panel.focusModifier, panel.playerModifier)
         else text = GenerateHybridMacro(spell, helpSpell, panel.focusModifier, panel.playerModifier) end
@@ -1375,15 +1415,16 @@ function module:CreateOptionsPanel(parentCategory)
         controls:SetShown(module:IsEnabled())
         local hybrid = panel.macroType == "hybrid"
         local preset = panel.macroType == "preset"
+        local editable = not preset or (PRESET_MACROS[panel.preset] and PRESET_MACROS[panel.preset].editableSpell)
         focusModifierLabel:SetShown(not preset)
-        playerModifierLabel:SetShown(not preset)
+        playerModifierLabel:SetShown(not preset and panel.macroType ~= "channeling")
         presetLabel:SetShown(preset)
-        nameLabel:SetShown(not preset)
-        panel.name:SetShown(not preset)
-        spellLabel:SetShown(not preset)
-        panel.spell:SetShown(not preset)
+        nameLabel:SetShown(editable)
+        panel.name:SetShown(editable)
+        spellLabel:SetShown(editable)
+        panel.spell:SetShown(editable)
         if panel.focusDropdown then panel.focusDropdown:SetShown(not preset) end
-        if panel.playerDropdown then panel.playerDropdown:SetShown(not preset) end
+        if panel.playerDropdown then panel.playerDropdown:SetShown(not preset and panel.macroType ~= "channeling") end
         if panel.presetDropdown then panel.presetDropdown:SetShown(preset) end
         if panel.playerDropdown then
             local helpful = panel.macroType ~= "harm"
@@ -1391,7 +1432,7 @@ function module:CreateOptionsPanel(parentCategory)
             if not helpful then panel.playerDropdown:SetEnabled(false) end
             playerModifierLabel:SetAlpha(helpful and 1 or .5)
         end
-        spellLabel:SetText(panel.macroType == "dual" and L.SPELL or (panel.macroType == "help" and L.HELP_SPELL or L.HARM_SPELL))
+        spellLabel:SetText((panel.macroType == "dual" or panel.macroType == "channeling" or preset) and L.SPELL or (panel.macroType == "help" and L.HELP_SPELL or L.HARM_SPELL))
         panel.helpSpell:SetShown(hybrid)
         secondLabel:SetShown(hybrid)
         local text, err = Build()
@@ -1425,7 +1466,7 @@ function module:CreateOptionsPanel(parentCategory)
         end)
         return dropdown
     end
-    panel.typeDropdown = Dropdown(16, {{"dual", L.GENERAL}, {"harm", L.HARM}, {"help", L.HELP}, {"hybrid", L.HYBRID}, {"preset", L.PRESET}}, L.GENERAL, function(value)
+    panel.typeDropdown = Dropdown(16, {{"dual", L.GENERAL}, {"harm", L.HARM}, {"help", L.HELP}, {"hybrid", L.HYBRID}, {"channeling", L.CHANNELING}, {"preset", L.PRESET}}, L.GENERAL, function(value)
         if value then panel.macroType = value end
         return panel.macroType
     end)
@@ -1441,11 +1482,13 @@ function module:CreateOptionsPanel(parentCategory)
         if value then panel.playerModifier = value end
         return panel.playerModifier
     end, -164)
-    panel.presetDropdown = Dropdown(16, {{"disenchant", L.DISENCHANT}}, L.DISENCHANT, function(value)
+    panel.presetDropdown = Dropdown(16, {{"disenchant", L.DISENCHANT}, {"comprehendScroll", L.COMPREHEND_SCROLL}, {"focusCC", L.AUTO_FOCUS_CC}}, L.DISENCHANT, function(value)
         if value then panel.preset = value end
         return panel.preset
     end, -164)
-    for _, input in ipairs({panel.name, panel.spell, panel.helpSpell}) do
+    local inputs = {panel.name, panel.spell, panel.helpSpell}
+    for _, input in ipairs(inputs) do
+        input:SetScript("OnTabPressed", function(self) NextMacroInput(inputs, self) end)
         input:SetScript("OnTextChanged", RefreshForm)
     end
     create:SetScript("OnClick", function()
@@ -1534,6 +1577,7 @@ module:RegisterSlashCommand(
         if type(arguments) ~= "string" then
 
             PrintUsage()
+            module:OpenOptionsPanel()
 
             return
         end
@@ -1551,15 +1595,16 @@ module:RegisterSlashCommand(
             return
         end
 
-        if not module:IsEnabled() then return end
-
         if arguments == "" then
 
             PrintUsage()
+            module:OpenOptionsPanel()
 
             return
         end
 
+
+        if not module:IsEnabled() then return end
 
         GenerateMacro(
             arguments

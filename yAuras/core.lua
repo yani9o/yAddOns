@@ -312,6 +312,32 @@ end
 function A:AuraFrameLevel(id)
  return 128+math.max(0,#yAurasDB.auras-(id or 1))*16
 end
+function A:StopAuraDrag()
+ local drag=self.activeAuraDrag
+ if not drag then return end
+ self.activeAuraDrag=nil
+ local frame=drag.frame
+ frame:StopMovingOrSizing();frame.dragging=false
+ if drag.preview then frame:SetMovable(false) end
+ local x,y=frame:GetCenter();local cx,cy=UIParent:GetCenter()
+ local rule=yAurasDB.auras[drag.id]
+ if rule and x and y and cx and cy then
+  rule.xpos=floor(x-cx+.5);rule.ypos=floor(y-cy+.5)
+  frame:ClearAllPoints();frame:SetPoint("CENTER",UIParent,"CENTER",rule.xpos,rule.ypos)
+  local gui=self.gui
+  if gui and gui.editor and gui.auraEdit==drag.id then
+   gui.editor.x:SetText(rule.xpos);gui.editor.y:SetText(rule.ypos)
+   if self.TestAuraDual and self.TestAuraDual:IsVisible() then self:AnchorPreview(self.TestAuraDual,-rule.xpos,rule.ypos) end
+  end
+  self:InvalidateRule(drag.id)
+ end
+end
+function A:StartAuraDrag(frame,id,preview)
+ if not (self.preview or self.moveAuras) or not yAurasDB.auras[id] then return end
+ self:StopAuraDrag()
+ self.activeAuraDrag={frame=frame,id=id,preview=preview}
+ frame:SetMovable(true);frame:StartMoving();frame.dragging=true
+end
 function A:MakeFrame()
  local f=CreateFrame("Frame",nil,UIParent,"BackdropTemplate")
  f:SetFrameStrata("BACKGROUND"); f:SetFrameLevel(128); f:SetMovable(true); f:SetClampedToScreen(true)
@@ -320,12 +346,12 @@ function A:MakeFrame()
  f.timer=f:CreateFontString(nil,"OVERLAY"); self:CenterAuraTimer(f.timer,f)
  f.stacks=f:CreateFontString(nil,"OVERLAY"); f.stacks:SetPoint("BOTTOMRIGHT",-2,2)
  f:RegisterForDrag("LeftButton")
- f:SetScript("OnDragStart",function(self) if A.preview or A.moveAuras then self:StartMoving(); self.dragging=true end end)
+ f:SetScript("OnDragStart",function(self) A:StartAuraDrag(self,self.id,false) end)
  f:SetScript("OnDragStop",function(self)
-  self:StopMovingOrSizing(); self.dragging=false
-  local x,y=self:GetCenter(); local cx,cy=UIParent:GetCenter()
-  local rule=yAurasDB.auras[self.id]
-  if rule and x and cx then rule.xpos=floor(x-cx+.5); rule.ypos=floor(y-cy+.5); A:LoadFields(); A:Refresh() end
+  if A.activeAuraDrag and A.activeAuraDrag.frame==self then A:StopAuraDrag();A:Refresh() end
+ end)
+ f:SetScript("OnHide",function(self)
+  if A.activeAuraDrag and A.activeAuraDrag.frame==self then A:StopAuraDrag() end
  end)
  f:Hide(); return f
 end
@@ -400,13 +426,13 @@ function A:Refresh()
 end
 local events=CreateFrame("Frame")
 for _,ev in ipairs({"UNIT_AURA","UNIT_HEALTH","UNIT_FLAGS","UNIT_TARGET","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED","SPELL_UPDATE_COOLDOWN","SPELL_UPDATE_CHARGES","SPELLS_CHANGED","PLAYER_REGEN_ENABLED","PLAYER_REGEN_DISABLED","GROUP_ROSTER_UPDATE","UNIT_PET","UNIT_SPELLCAST_SUCCEEDED","ADDON_RESTRICTION_STATE_CHANGED","PLAYER_ENTERING_WORLD"}) do events:RegisterEvent(ev) end
--- Coalesce event bursts and update timers at the selected rate; no scanning without rules.
+-- Coalesce event bursts and refresh at 10 Hz; no scanning without rules.
 local elapsed,dirty=0,true
 function A:Schedule()
  if self.enabled and #yAurasDB.auras>0 then
   events:SetScript("OnUpdate",function(_,dt)
    elapsed=elapsed+dt
-   if elapsed>=1/yAurasDB.refresh or dirty then elapsed=0; dirty=false; A:Refresh() end
+   if elapsed>=0.1 or dirty then elapsed=0; dirty=false; A:Refresh() end
   end)
  else events:SetScript("OnUpdate",nil) end
 end
@@ -422,6 +448,9 @@ events:SetScript("OnEvent",function(_,ev,unit,castGUID,spellID)
   if A.loaded then A:SyncNative();A:Refresh();dirty=false end;return
  end
  if ev=="UNIT_AURA" and unit~="player" and unit~="target" and unit~="focus" and unit~="targettarget" and unit~="pet" then return end
+ -- The editor suppresses gameplay reads, but newly appearing public buffs
+ -- still need to teach their IDs to the native filters before combat starts.
+ if ev=="UNIT_AURA" and A.loaded and A.PrimeAuraRules then A:PrimeAuraRules(unit) end
  if ev=="SPELL_UPDATE_COOLDOWN" and A.loaded then A:CaptureCooldownFlags() end
  if ev=="UNIT_SPELLCAST_SUCCEEDED" then if unit=="player" then A:NoteOwnCast(spellID) end; return end
  if ev=="SPELLS_CHANGED" or ev=="PLAYER_REGEN_ENABLED" or ev=="ADDON_RESTRICTION_STATE_CHANGED" or ev=="PLAYER_ENTERING_WORLD" then A:InvalidateAll(); if ev=="SPELLS_CHANGED" then A:LearnSpellBook() end end

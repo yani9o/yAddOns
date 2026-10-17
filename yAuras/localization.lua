@@ -2,6 +2,8 @@
 -- Keep internal IDs, commands and saved values out of translated UI text.
 local _, addon = ...
 local terms = {
+    ["OPEN_YAURAS_EDITOR"] = { enUS = "Open yAuras editor", deDE = "yAuras-Editor öffnen" },
+    ["SPELL_NAME_LOOKUP"] = { enUS = "Spell name not resolved yet: ", deDE = "Zaubername noch nicht aufgelöst: " },
     ["ADD_AURA"] = { enUS = "Add aura", deDE = "Aura hinzufügen" },
     ["COPY_AURA"] = { enUS = "Copy aura", deDE = "Aura kopieren" },
     ["EXPORT_AURA"] = { enUS = "Export aura", deDE = "Aura exportieren" },
@@ -136,38 +138,6 @@ local terms = {
     ["ZOOM_ICONS_SQUARE_1PX_BLACK_BORDER"] = {
         enUS = "Zoom icons (square, 1px black border)",
         deDE = "Icons vergrößern (quadratisch, schwarzer 1px-Rahmen)",
-    },
-    ["OPEN_YAURAS_EDITOR"] = {
-        enUS = "Open yAuras editor",
-        deDE = "yAuras-Editor öffnen",
-    },
-    ["SA_REFRESH_1_10_CURRENT"] = {
-        enUS = "/sa refresh 1-10 (current: ",
-        deDE = "/sa refresh 1-10 (aktuell: ",
-    },
-    ["APPROXIMATE_PLAYER_DEBUFFS"] = {
-        enUS = "Approximate player debuffs: ",
-        deDE = "Geschätzte Spieler-Debuffs: ",
-    },
-    ["SA_APPROXIMATE_ON_OFF_LEARNS_OUTSIDE_COMBAT_MATCHES_MAY_BE_AMBIGUOUS"] = {
-        enUS = ". /sa approximate on|off. Learns outside combat; matches may be ambiguous.",
-        deDE = ". /sa approximate on|off. Lernt außerhalb des Kampfes; Zuordnungen können mehrdeutig sein.",
-    },
-    ["CLIENT"] = {
-        enUS = "Client: ",
-        deDE = "Client: ",
-    },
-    ["AURAS"] = {
-        enUS = "; auras: ",
-        deDE = "; Auren: ",
-    },
-    ["UNAVAILABLE_RULES"] = {
-        enUS = "; unavailable rules: ",
-        deDE = "; nicht verfügbare Regeln: ",
-    },
-    ["SA_EDITOR_SA_REFRESH_1_10_SA_ENABLE_DISABLE_SA_STATUS_SA_NATIVE_SA_APPROXIMATE_ON_OFF"] = {
-        enUS = "/sa — editor; /sa refresh 1-10; /sa enable|disable; /sa status; /sa native; /sa approximate on|off",
-        deDE = "/sa — Editor; /sa refresh 1-10; /sa enable|disable; /sa status; /sa native; /sa approximate on|off",
     },
     ["UNSUPPORTED_DATA"] = {
         enUS = "Unsupported data",

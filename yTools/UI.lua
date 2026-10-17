@@ -179,7 +179,7 @@ function UI.TooltipFooterGap(tooltip, section)
                 local text = line:GetText()
                 if not (issecretvalue and issecretvalue(text)) then
                     lastText = text
-                    if text == L.ITEM_ID or text == L.SPELL_ID or text == L.NPC_ID then
+                    if text == L.ITEM_ID or text == L.SPELL_ID or text == L.QUEST_ID or text == L.NPC_ID then
                         ids, footer = true, true
                     elseif text == L.ITEM_COUNT_TOTAL then
                         counts, footer = true, true

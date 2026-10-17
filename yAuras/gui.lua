@@ -173,37 +173,18 @@ function sA:CreateTestAuras()
 	dragger:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8",edgeSize = 1,})
 	dragger:SetBackdropBorderColor(0, 1, 0, 0.5) -- Green, semi-transparent
 
-	dragger:SetScript("OnDragStart", function(self)
-		TestAura:SetMovable(true)
-		TestAura:StartMoving()
-	end)
-
-	dragger:SetScript("OnDragStop", function(self)
-		TestAura:StopMovingOrSizing()
-		TestAura:SetMovable(false)
-		
-		local frameX, frameY = TestAura:GetCenter()
-		local centerX, centerY = UIParent:GetCenter()
-		
-		local offsetX = frameX - centerX
-		local offsetY = frameY - centerY
-	
-		offsetX = math.floor(offsetX + 0.5)
-		offsetY = math.floor(offsetY + 0.5)
-		
-		yAurasDB.auras[gui.auraEdit].xpos = offsetX
-		yAurasDB.auras[gui.auraEdit].ypos = offsetY
-		
-		gui.editor.x:SetText(offsetX)
-		gui.editor.y:SetText(offsetY)
-		
-		-- Gameplay frames are reused; no reset needed.
-		sA:InvalidateRule(gui.auraEdit)
-		if sA.TestAuraDual and sA.TestAuraDual:IsVisible() then
-			sA:AnchorPreview(sA.TestAuraDual,-offsetX,offsetY)
-		end
-
-	end)
+	dragger:SetScript("OnDragStart", function()
+      sA:StartAuraDrag(TestAura,gui.auraEdit,true)
+    end)
+    dragger:SetScript("OnDragStop", function()
+      sA:StopAuraDrag();sA:Refresh()
+    end)
+    dragger:SetScript("OnHide", function()
+      if sA.activeAuraDrag and sA.activeAuraDrag.frame==TestAura then sA:StopAuraDrag() end
+    end)
+    TestAura:SetScript("OnHide", function()
+      if sA.activeAuraDrag and sA.activeAuraDrag.frame==TestAura then sA:StopAuraDrag() end
+    end)
 
 	sA.TestAura = TestAura
 	dragger:Hide()
@@ -582,6 +563,7 @@ function sA:EditAura(id)
     ed:SetMovable(true)
     ed:EnableMouse(true)
     ed:SetScript("OnHide", function()
+      sA:StopAuraDrag()
       gui.editor=nil; gui.auraEdit=nil
       sA.TestAura:Hide(); sA.TestAuraDual:Hide()
       for _,key in ipairs({"typeButton","unitButton","showCD","targetType"}) do
@@ -1650,6 +1632,7 @@ function sA:LoadFields()
  if gui.editor and gui.auraEdit then self:EditAura(gui.auraEdit) end
 end
 function sA:CloseEditor()
+ self:StopAuraDrag()
  if self.editor then self.editor:Hide() end
  gui.editor=nil; gui.auraEdit=nil
  if self.TestAura then self.TestAura:Hide(); self.TestAuraDual:Hide() end
@@ -1662,6 +1645,7 @@ sA.editorUpdate:SetScript("OnUpdate",function()
  if not sA.loaded then return end
  local moving = gui:IsShown() and IsControlKeyDown() and IsAltKeyDown() and IsShiftKeyDown()
  if moving ~= sA.moveAuras then
+  if not moving then sA:StopAuraDrag() end
   sA.moveAuras=moving; gui:SetAlpha(moving and 0 or 1)
   if gui.editor then gui.editor:SetAlpha(moving and 0 or 1) end
   if sA.draggers[0] then sA.draggers[0]:SetShown(moving and gui.editor~=nil) end

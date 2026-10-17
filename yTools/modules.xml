@@ -25,6 +25,7 @@
 	<Script file="Modules\TooltipItemLevel.lua"/>
 	<Script file="Modules\TooltipItemCount.lua"/>
 	<Script file="Modules\TooltipItemID.lua"/>
+	<Script file="Modules\TooltipQuestID.lua"/>
 	<Script file="Modules\TooltipSpellID.lua"/>
 	<Script file="Modules\TooltipTargetTarget.lua"/>
 	<Script file="Modules\TooltipUnitID.lua"/>

@@ -6,6 +6,7 @@
 ## Version: 1.0
 ## AddonCompartmentFunc: yAuras_OnAddonCompartmentClick
 ## OptionalDeps: yTools
+## SavedVariables: yAurasAccountDB
 ## SavedVariablesPerCharacter: yAurasDB
 ## IconTexture: Interface\icons\Spell_holy_improvedresistanceauras
 localization.lua

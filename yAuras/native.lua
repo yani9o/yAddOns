@@ -10,11 +10,150 @@ local function locked() return A.combatState==true or (InCombatLockdown and InCo
 A.nativeEntries={}; A.nativeDirty=true; A.spellIDs={}
 function A:InvalidateRule() self.nativeDirty=true; self.resolved={} end
 function A:InvalidateAll() self:InvalidateRule() end
+-- The client only resolves some names directly. Index public spell metadata
+-- independently of aura presence so unknown procs can be configured by name.
+local nameWorker=CreateFrame("Frame")
+local nameIndex,pendingNames,searchNames,priority,queued={},{},{},{},{}
+local cursor,priorityCursor,upper=1,1,2000000
+local function ReadSpellName(id)
+ local name
+ if C_Spell and C_Spell.GetSpellName then name=safe(C_Spell.GetSpellName,id)
+ elseif C_Spell and C_Spell.GetSpellInfo then
+  local info=safe(C_Spell.GetSpellInfo,id)
+  if info and public(info) then name=info.name end
+ end
+ if public(name) and type(name)=="string" and name~="" then return name end
+end
+local function QueueNearby(id)
+ if type(id)~="number" or id<=0 or id~=math.floor(id) then return end
+ upper=math.max(upper,id+100000)
+ -- Rank and triggered-buff definitions often live near their parent spell.
+ -- This is only a search priority; every match uses the actual localized name.
+ for distance=0,32 do
+  for _,candidate in ipairs(distance==0 and {id} or {id-distance,id+distance}) do
+   if candidate>0 and not queued[candidate] then
+    queued[candidate]=true;priority[#priority+1]=candidate
+   end
+  end
+ end
+end
+local function SeedClassSpells()
+ for _,ids in pairs(A.spellIDs) do for id in pairs(ids) do QueueNearby(id) end end
+ local traits=C_Traits
+ local configID=C_ClassTalents and safe(C_ClassTalents.GetActiveConfigID)
+ if not configID or not traits or not traits.GetConfigInfo or not traits.GetTreeNodes
+  or not traits.GetNodeInfo or not traits.GetEntryInfo or not traits.GetDefinitionInfo then return end
+ local config=safe(traits.GetConfigInfo,configID)
+ for _,treeID in ipairs(config and config.treeIDs or {}) do
+  for _,nodeID in ipairs(safe(traits.GetTreeNodes,treeID) or {}) do
+   local node=safe(traits.GetNodeInfo,configID,nodeID)
+   for _,entryID in ipairs(node and node.entryIDs or {}) do
+    local entry=safe(traits.GetEntryInfo,configID,entryID)
+    local definition=entry and safe(traits.GetDefinitionInfo,entry.definitionID)
+    if definition then QueueNearby(definition.spellID) end
+   end
+  end
+ end
+end
+local function SearchVersion()
+ local build="unknown"
+ if GetBuildInfo then local _,value=GetBuildInfo();build=tostring(value) end
+ return build..":"..GetLocale()..":"..upper
+end
+-- Shared metadata only; aura configurations and debuff timing profiles stay per character.
+function A:SpellCache()
+ local build="unknown"
+ if GetBuildInfo then local _,value=GetBuildInfo();build=tostring(value) end
+ local version=build..":"..GetLocale()
+ yAurasAccountDB=type(yAurasAccountDB)=="table" and yAurasAccountDB or {}
+ local cache=yAurasAccountDB.spellCache
+ if type(cache)~="table" or cache.version~=version then
+  cache={version=version,spellNameIDs={},knownAuraIDs={},spellNameIndexComplete={}}
+  yAurasAccountDB.spellCache=cache
+ end
+ return cache
+end
+local function SaveNameMatches(name,ids)
+ A:SpellCache().spellNameIDs=A:SpellCache().spellNameIDs or {}
+ local saved=A:SpellCache().spellNameIDs[name] or {}
+ A:SpellCache().spellNameIDs[name]=saved
+ local changed=false
+ for id in pairs(ids) do
+  if not saved[id] then saved[id]=true;changed=true end
+ end
+ if changed then A.nativeDirty=true end
+ return changed
+end
+local function UpdateNameLookup()
+ if locked() or not A.loaded then return end
+ for name in pairs(searchNames) do
+  local watched=false
+  for _,rule in ipairs(yAurasDB.auras) do
+   if rule.enabled==1 and rule.type~="Cooldown" and rule.name==name then watched=true;break end
+  end
+  if not watched then searchNames[name]=nil;pendingNames[name]=nil end
+ end
+ if not next(searchNames) then nameWorker:SetScript("OnUpdate",nil);return end
+ local start=debugprofilestop and debugprofilestop()
+ local changed=false
+ for _=1,250 do
+  local id=priority[priorityCursor]
+  if id then priorityCursor=priorityCursor+1
+  elseif cursor<=upper then id=cursor;cursor=cursor+1
+  else
+   A:SpellCache().spellNameIndexComplete=A:SpellCache().spellNameIndexComplete or {}
+   for name in pairs(searchNames) do A:SpellCache().spellNameIndexComplete[name]=SearchVersion() end
+   wipe(searchNames)
+   nameWorker:SetScript("OnUpdate",nil);break
+  end
+  local name=ReadSpellName(id)
+  if name and searchNames[name] then
+   local ids=nameIndex[name] or {};nameIndex[name]=ids;ids[id]=true
+   if SaveNameMatches(name,ids) then changed=true end
+   pendingNames[name]=nil
+  end
+  if start and debugprofilestop()-start>=2 then break end
+ end
+ if changed then A:Refresh() end
+end
+function A:LookupSpellName(name,knownIDs)
+ local ids=nameIndex[name]
+ if ids then SaveNameMatches(name,ids) end
+ local complete=A:SpellCache().spellNameIndexComplete and A:SpellCache().spellNameIndexComplete[name]
+ if not searchNames[name] and complete~=SearchVersion()
+  and C_Spell and (C_Spell.GetSpellName or C_Spell.GetSpellInfo) then
+  searchNames[name]=true
+  if not next(knownIDs) and not ids then pendingNames[name]=true end
+  for id in pairs(knownIDs) do QueueNearby(id) end
+  SeedClassSpells()
+  -- A newly watched name must also be checked in the earlier part of the
+  -- catalog. Only requested names are held in memory or saved.
+  cursor=1
+  nameWorker:SetScript("OnUpdate",UpdateNameLookup)
+ end
+ return ids
+end
 local profileFlags={"canApplyAura","isStealable","isBossAura","isFromPlayerOrPlayerPet","nameplateShowAll","nameplateShowPersonal"}
 function A:RememberAura(d,unit)
- if not d or not public(d) or not public(d.name) or not public(d.spellId) or not d.spellId then return end
+ if not d or not public(d) or not public(d.name) or not public(d.spellId)
+  or type(d.name)~="string" or type(d.spellId)~="number"
+  or d.spellId<=0 or d.spellId~=math.floor(d.spellId) then return end
  local ids=self.spellIDs[d.name] or {}; self.spellIDs[d.name]=ids
  if not ids[d.spellId] then ids[d.spellId]=true; self.nativeDirty=true end
+ -- Retain only identities actually observed on a watched aura. Spellbook
+ -- entries alone can refer to the talent/cast rather than its proc buff.
+ -- No presence, remaining time, or aura instance data is saved here.
+ if unit and yAurasDB then
+  for _,rule in ipairs(yAurasDB.auras) do
+   if rule.type~="Cooldown" and (rule.name==d.name or tonumber(rule.name)==d.spellId) then
+    A:SpellCache().knownAuraIDs=A:SpellCache().knownAuraIDs or {}
+    local known=A:SpellCache().knownAuraIDs[d.name] or {}
+    A:SpellCache().knownAuraIDs[d.name]=known
+    known[d.spellId]=true
+    break
+   end
+  end
+ end
  -- Learn only public player debuffs outside combat. Save properties, never
  -- presence/expiration/instance IDs; no old aura can be resurrected at combat start.
  if unit~="player" or locked() or not public(d.isHarmful) or d.isHarmful~=true then return end
@@ -38,12 +177,42 @@ function A:ResolveIDs(rule)
  local numeric=tonumber(rule.name)
  if numeric then return {[numeric]=true} end
  local ids=self:Copy(self.spellIDs[rule.name] or {})
+ local indexed=A:SpellCache().spellNameIDs and A:SpellCache().spellNameIDs[rule.name]
+ if type(indexed)=="table" then for id,valid in pairs(indexed) do
+  if valid==true and type(id)=="number" and id>0 and id==math.floor(id) then ids[id]=true end
+ end end
+ local known=A:SpellCache().knownAuraIDs and A:SpellCache().knownAuraIDs[rule.name]
+ if type(known)=="table" then
+  for id,valid in pairs(known) do
+   if valid==true and type(id)=="number" and id>0 and id==math.floor(id) then ids[id]=true end
+  end
+ end
  for id,p in pairs(yAurasDB.debuffProfiles or {}) do if p.name==rule.name then ids[id]=true end end
  local id=self:Spell(rule.name); if id then ids[id]=true end
+ if rule.enabled==1 and rule.type~="Cooldown" then
+  local matches=self:LookupSpellName(rule.name,ids)
+  if matches then for spellID in pairs(matches) do ids[spellID]=true end end
+ end
  return ids
 end
+-- Learn the actual aura spell IDs before building native filters. A proc can
+-- share its name with a talent or cast spell that has a different ID.
+function A:PrimeAuraRules(changedUnit)
+ if locked() or not self.loaded then return end
+ local scanned={}
+ for _,rule in ipairs(yAurasDB.auras) do
+  if rule.enabled==1 and rule.type~="Cooldown" and rule.name~="" then
+   local unit=self:AuraUnit(rule)
+   if (not changedUnit or changedUnit==unit) and UnitExists(unit) then
+    local filter=rule.type=="Debuff" and "HARMFUL" or "HELPFUL"
+    local key=unit..":"..filter
+    if not scanned[key] then self:Scan(unit,filter,false);scanned[key]=true end
+   end
+  end
+ end
+end
 function A:ApproximateCandidates(rule,ids)
- if yAurasDB.approximate==false or rule.type~="Debuff" or rule.unit~="Player" then return end
+ if rule.type~="Debuff" or rule.unit~="Player" then return end
  local merged
  for id in pairs(ids) do
   local p=(yAurasDB.debuffProfiles or {})[id]
@@ -209,7 +378,9 @@ local function makeSide(rule,mirror,id)
  return side
 end
 function A:PrepareNative()
- if not self.nativeDirty or locked() or (self.gui and self.gui:IsShown()) then return end
+ if locked() then return end
+ if self.nativeDirty then self:PrimeAuraRules() end
+ if not self.nativeDirty then return end
  if not self.nativeLoaded then
   if C_AddOns and C_AddOns.LoadAddOn then pcall(C_AddOns.LoadAddOn,"Blizzard_AuraContainer") end
   self.nativeLoaded=true; self:LearnSpellBook()
@@ -250,7 +421,7 @@ function A:UseNative(i,rule,force)
  local entry=self.nativeEntries[i]
  if not entry or entry.rule~=rule or #entry.sides==0 or entry.error then return false end
  -- Public out-of-combat reads remain exact and keep learning the profile.
- if entry.approximate and (yAurasDB.approximate==false or not locked() or not self:IsAuraRestricted(entry.ids)) then return false end
+ if entry.approximate and (not locked() or not self:IsAuraRestricted(entry.ids)) then return false end
  if not force and not entry.engaged and not self:IsAuraRestricted(entry.ids) then return false end
  local allow=UnitExists(A:AuraUnit(rule)) and not self:IsDeadAuraUnit(rule) and not (self.gui and self.gui:IsShown()) and self.enabled and rule.enabled==1 and rule.name~="" and self:Conditions(rule) and not self.preview and not self.moveAuras and (entry.approximate or self:CanNativeFilter(rule,entry.ids))
  if not allow then return false end
@@ -271,14 +442,19 @@ function A:HideUnusedNative()
  end
 end
 function A:NativeStatus()
- self:Msg(L.BUILD_2_2_31_APPROXIMATE_PLAYER_DEBUFFS..(yAurasDB.approximate==false and L.VALUE_OFF or L.VALUE_ON))
+ self:Msg(L.BUILD_2_2_31_APPROXIMATE_PLAYER_DEBUFFS..L.VALUE_ON)
+ for _,rule in ipairs(yAurasDB.auras) do
+  if rule.enabled==1 and rule.type~="Cooldown" and pendingNames[rule.name] then
+   self:Msg(L.SPELL_NAME_LOOKUP..rule.name)
+  end
+ end
  local count=0
  for i,e in pairs(self.nativeEntries) do
   local ids={}; for id in pairs(e.ids) do ids[#ids+1]=id end; table.sort(ids)
   self:Msg("["..i.."] "..e.rule.name..L.IDS..table.concat(ids,",").."; "..(#e.sides>0 and L.VALUE_NATIVE or L.VALUE_FALLBACK)..(e.error and ": "..e.error or ""))
   if e.approximate then
    self:Msg(L.LEARNED_PROPERTY_MATCHING_NATIVE_LIVE_TIMER..(self:NativeSort(true) and L.STABLE_INSTANCE_ID_ORDER_NOT_AN_INSTANCE_LOCK or L.INSTANCE_ID_SORTING_UNAVAILABLE_ON_THIS_CLIENT))
-  elseif e.rule.type=="Debuff" and e.rule.unit=="Player" and yAurasDB.approximate~=false then
+  elseif e.rule.type=="Debuff" and e.rule.unit=="Player" then
    self:Msg(L.WAITING_TO_LEARN_THIS_DEBUFF_OUTSIDE_COMBAT_APPLY_IT_ONCE_THEN_ENTER_COMBAT)
   elseif not self:CanNativeFilter(e.rule,e.ids) then
    self:Msg(L.COMBAT_IDENTITY_FILTER_UNAVAILABLE_FOR..self:LocalizeValue(e.rule.unit).." "..self:LocalizeValue(e.rule.type)..L.ONLY_READABLE_EXACT_MATCHES_CAN_BE_SHOWN)

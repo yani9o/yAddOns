@@ -181,6 +181,12 @@ local function ShowLink(url)
     editBox:HighlightText()
 end
 
+-- Other modules can use the copy window independently of chat link detection.
+function module:ShowLink(url)
+    if IsSecret(url) or type(url) ~= "string" then return end
+    ShowLink(url)
+end
+
 local function HookFrame(frame)
     if not frame or frame == _G.ChatFrame2 or frame == _G.CombatLogChatFrame
         or hookedFrames[frame] or (frame.IsForbidden and frame:IsForbidden()) then return end

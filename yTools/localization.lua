@@ -2,6 +2,9 @@
 -- Keep internal IDs, commands and saved values out of translated UI text.
 local _, addon = ...
 local terms = {
+    ["TOOLTIP_QUEST_IDS"] = { enUS = "Tooltip > Quest IDs", deDE = "Tooltip > Quest-IDs" },
+    ["TOOLTIP_QUEST_IDS_DESCRIPTION"] = { enUS = "Shows quest IDs in quest tooltips.", deDE = "Zeigt Quest-IDs in Quest-Tooltips." },
+    ["QUEST_ID"] = { enUS = "Quest ID:", deDE = "Quest-ID:" },
     ["BAG_SLOTS_OPTIONS"] = { enUS = "Bag Slots", deDE = "Taschenplätze" },
     ["BAG_SLOTS_COMMAND_HELP"] = { enUS = "Opens the bag slot options.", deDE = "Öffnet die Optionen für Taschenplätze." },
     ["ENABLE_BAG_SLOTS"] = { enUS = "Enable bag slot layout", deDE = "Taschenplatz-Anordnung aktivieren" },
@@ -495,6 +498,18 @@ local terms = {
     ["SHIFT"] = {
         enUS = "Shift",
         deDE = "Umschalt",
+    },
+    ["CHANNELING"] = {
+        enUS = "Channeling",
+        deDE = "Channeling",
+    },
+    ["AUTO_FOCUS_CC"] = {
+        enUS = "Auto-focus CC",
+        deDE = "CC mit Auto-Fokus",
+    },
+    ["COMPREHEND_SCROLL"] = {
+        enUS = "Comprehend Scroll",
+        deDE = "Schriftrolle verstehen",
     },
     ["DISENCHANT"] = {
         enUS = "Disenchant",
