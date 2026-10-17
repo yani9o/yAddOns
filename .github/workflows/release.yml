@@ -1,27 +1,43 @@
-name: Package addon
+name: Release after merged PR
 
 on:
-  release:
-    types: [published]
+  pull_request_target:
+    branches: [main]
+    types: [closed]
 
 permissions:
   contents: write
 
 jobs:
-  package:
+  release:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
 
-      - name: Create ZIP with correct folder name
+      - name: Package addon
+        env:
+          ADDON_NAME: ${{ github.event.repository.name }}
         run: |
-          git archive --format=zip --prefix=yAuras/ \
-            --output="$RUNNER_TEMP/yAuras.zip" HEAD
+          git archive --format=zip \
+            --prefix="$ADDON_NAME/" \
+            --output="$RUNNER_TEMP/$ADDON_NAME.zip" HEAD
 
-      - name: Upload ZIP to release
+      - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/yAuras.zip"
+          ADDON_NAME: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          gh release create "pr-$PR_NUMBER" \
+            "$RUNNER_TEMP/$ADDON_NAME.zip" \
+            --target "$MERGE_SHA" \
+            --title "$ADDON_NAME — PR #$PR_NUMBER" \
+            --notes "Automatic release after merging PR #$PR_NUMBER." \
+            --latest
