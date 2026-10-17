@@ -1,7 +1,4 @@
-# yAddOns
-
-<img width="107" height="101" alt="image" src="https://github.com/user-attachments/assets/dd0ba573-682a-4b13-806f-1dc7a90e0cad" />
-
+# yAuras
 
 ### ⚠️ **Information**
 - These AddOns exist primarly for my personal use.
@@ -10,8 +7,6 @@
 - The AddOns themself are standalone.
 - Tested in german, english is available (untested).
 
-
-# 1 - yAuras
 <img width="315" height="248" alt="image" src="https://github.com/user-attachments/assets/67ea3ab6-3d9f-400b-8791-60e3d86e6a36" />
 
 This is a port of my Turtle-WoW AddOn [simpleAuras](https://github.com/yani9o/simpleAuras).
@@ -23,77 +18,3 @@ This is a port of my Turtle-WoW AddOn [simpleAuras](https://github.com/yani9o/si
 
 
 Here you can add/remove, import/export and change your Auras.
-
-
-# 2 - yTalents
-<img width="924" height="544" alt="image" src="https://github.com/user-attachments/assets/60db5eff-db96-4918-b87d-1abdced7fc03" />
-
-
-Adds an additional Tab to the Talent-Window, also works for Characters without any Talents.
-
-There you can plan your Talentbuilds (also for other classes) and manage them accountwide.
-
-Inspecting Player's Talents will also load them into the Talentbuilder.
-
-You can also share the Builds to your Target or enter a First- and Lastname when no player is targeted (only works if they also have the AddOn, otherwise they just see a string of code).
-
-
-Supported Talentbuilders are:
-- https://talentsforever.com/
-- https://www.wowhead.com/forever/talent-calc/
-- https://www.warcrafttavern.com/forever/tools/talent-calculator/
-
-# 3 - yTools
-<img width="700" height="557" alt="image" src="https://github.com/user-attachments/assets/15dd1106-b2f1-4808-a679-df06d8315cb3" />
-
-Collection of QoL Modules for WoW Forever.
-
-Complete List of current Modules (can be individually de-/activated - explanations are in mainmenu):
-
-Actionbars
-- Hide MacroText
-- Hide ActionBarPageIndicator
-- Cast Spells on Key-Release
-
-Auras
-- Hide BuffList Button
-
-Automation
-- AutoRepair
-- AutoSellJunk
-- Fishing-Helper (double-rightclick to cast fishing with equipped fishingpole + optional audio changes)
-
-Bags
-- Movable Bags
-- Reorganize BagSlots
-
-Chat
-- ChatArrowKeys
-- CopyChat (incl. button on top-right of chat)
-- CopyLinks
-
-Tools
-- Macro-Generator (personal, probably no use to you...)
-- Notepad
-
-Tooltips
-- ItemLevel
-- ItemCount
-- ItemID
-- SpellID
-- TargetTarget
-- UnitID
-- VendorPrice
-
-UI
-- Always show Infopanel (i.e. Characterstats or Reputationdetails)
-- Characterstats (Sorting/Filtering)
-- Move Framerate to topleft
-- Hide LuaErrors
-- Hide PtrIssueReporter
-- Move Rollframe (probably not needed anymore after blizzard fix, but i'll leave it anyway)
-
-UnitFrames
-- Center Target- & Focus-Castbars
-- Hide Hit-Indicator on Portraits
-- Change PlayerBorder (silver, gold and winged variants)
