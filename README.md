@@ -3,7 +3,7 @@
 ### ⚠️ **Information**
 - This AddOn exists primarly for my personal use.
 - ChatGPT was used heavily to create them.
-- I tested all of the AddOns and modules - there might still be bugs.
+- AddOn was tested - there might still be bugs.
 - The AddOns themself are standalone.
 - Tested in german, english is available (untested).
 
